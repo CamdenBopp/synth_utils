@@ -6,9 +6,9 @@
 //  window and appears in Cmd-Tab; --background launches menu-bar-only.
 //  Cmd+Q closes the window (stays in menu bar); Cmd+Shift+Q quits.
 //
-//  Hooked into the SwiftUI App lifecycle via @NSApplicationDelegateAdaptor
-//  in DECtalkApp.swift, so this owns all window management directly
-//  (the App's Scene is just Settings {} / empty).
+//  Installed as the NSApplication delegate by the plain AppKit entry point
+//  in DECtalkApp.swift; owns all window management and the main menu
+//  directly (no SwiftUI app lifecycle involved).
 //
 
 import Cocoa
@@ -39,7 +39,14 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
     private var forceBackground: Bool { ProcessInfo.processInfo.arguments.contains("--background") }
     private var forceWindow: Bool { ProcessInfo.processInfo.arguments.contains("--window") }
 
-    private var clockEnabledMenuItem: NSMenuItem?
+    // Speak Clipboard / Talking Clock live in both the status item's menu
+    // and a regular top-level "Speech" menu (see installMainMenu), so
+    // they're reachable even if the status item itself lands somewhere
+    // unreachable — its on-screen position is decided by macOS's own
+    // menu bar layout and isn't fully controllable from here. Each menu
+    // gets its own "Enable Recurring Clock" item, so keep every instance
+    // to update its checkmark state together.
+    private var clockEnabledMenuItems: [NSMenuItem] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
 
@@ -137,7 +144,55 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
         quitItem.keyEquivalentModifierMask = [.command, .shift]
         appMenu.addItem(quitItem)
 
+        // Speak Clipboard and Talking Clock also live in the status item's
+        // own menu, but that menu is only reachable if the status item
+        // itself is. This top-level menu is reachable the normal way
+        // (always at a fixed spot) any time the app is frontmost, which
+        // Spotlight/Dock reactivation already gets you to independent of
+        // where macOS decided to put the status item.
+        let speechMenu = buildSpeechMenu()
+        speechMenu.title = "Speech"
+        let speechMenuItem = NSMenuItem()
+        speechMenuItem.submenu = speechMenu
+        mainMenu.addItem(speechMenuItem)
+
         NSApp.mainMenu = mainMenu
+    }
+
+    // Shared by the status item's menu and the top-level "Speech" menu so
+    // every action is reachable two ways.
+    private func buildSpeechMenu() -> NSMenu {
+        let menu = NSMenu()
+        menu.delegate = self
+
+        let speakClipboardItem = NSMenuItem(title: "Speak Clipboard", action: #selector(speakClipboard), keyEquivalent: "")
+        speakClipboardItem.target = self
+        menu.addItem(speakClipboardItem)
+
+        let openInputItem = NSMenuItem(title: "Open Text Input…", action: #selector(openTextInputFromMenu), keyEquivalent: "")
+        openInputItem.target = self
+        menu.addItem(openInputItem)
+
+        menu.addItem(.separator())
+
+        let clockMenu = NSMenu()
+
+        let clockEnabledItem = NSMenuItem(title: "Enable Recurring Clock", action: #selector(toggleClockEnabled), keyEquivalent: "")
+        clockEnabledItem.target = self
+        clockMenu.addItem(clockEnabledItem)
+        clockEnabledMenuItems.append(clockEnabledItem)
+
+        clockMenu.addItem(.separator())
+
+        let announceItem = NSMenuItem(title: "Announce Time Now", action: #selector(runAClock), keyEquivalent: "")
+        announceItem.target = self
+        clockMenu.addItem(announceItem)
+
+        let clockMenuItem = NSMenuItem(title: "Talking Clock", action: nil, keyEquivalent: "")
+        clockMenuItem.submenu = clockMenu
+        menu.addItem(clockMenuItem)
+
+        return menu
     }
 
     @objc private func closeWindowToMenuBar() {
@@ -171,44 +226,38 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
         // the user's dragged position to across launches, so a manually
         // repositioned icon doesn't reliably stay put session to session.
         item.autosaveName = "CamdenBopp.DECtalk.StatusItem"
+        // Explicitly opt into Control Center's modern management of
+        // third-party status items (user can Cmd-drag it, and it's
+        // slotted among other extras the same way theirs are) rather than
+        // leaving this unset and falling back to whatever legacy handling
+        // macOS applies to unmanaged items — measured behavior was landing
+        // far to the right of every other third-party item with hundreds
+        // of points of open space skipped over, which points at exactly
+        // this kind of legacy/unmanaged placement path.
+        item.behavior = [.removalAllowed]
         statusItem = item
 
         if let button = item.button {
-            button.title = "DT"
+            // A plain text title ("DT") is unusual for a menu bar extra —
+            // almost every well-behaved one uses a template image icon
+            // instead, and macOS's newer Control-Center-hosted layout for
+            // third-party status items is built/tested around that case.
+            // Text-title items are the more likely of the two to hit edge
+            // cases in that layout (which matches the icon landing crammed
+            // against the clock instead of in its own slot).
+            let symbolName = "waveform"
+            if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "DECtalk") {
+                image.isTemplate = true
+                button.image = image
+            } else {
+                button.title = "DT"
+            }
             button.toolTip = "DECtalk"
             button.setAccessibilityLabel("DECtalk Menu Bar")
             button.setAccessibilityHelp("Open the DECtalk menu")
         }
 
-        let menu = NSMenu()
-        menu.delegate = self
-
-        let speakClipboardItem = NSMenuItem(title: "Speak Clipboard", action: #selector(speakClipboard), keyEquivalent: "")
-        speakClipboardItem.target = self
-        menu.addItem(speakClipboardItem)
-
-        let openInputItem = NSMenuItem(title: "Open Text Input…", action: #selector(openTextInputFromMenu), keyEquivalent: "")
-        openInputItem.target = self
-        menu.addItem(openInputItem)
-
-        menu.addItem(.separator())
-
-        let clockMenu = NSMenu()
-
-        clockEnabledMenuItem = NSMenuItem(title: "Enable Recurring Clock", action: #selector(toggleClockEnabled), keyEquivalent: "")
-        clockEnabledMenuItem?.target = self
-        clockMenu.addItem(clockEnabledMenuItem!)
-
-        clockMenu.addItem(.separator())
-
-        let announceItem = NSMenuItem(title: "Announce Time Now", action: #selector(runAClock), keyEquivalent: "")
-        announceItem.target = self
-        clockMenu.addItem(announceItem)
-
-        let clockMenuItem = NSMenuItem(title: "Talking Clock", action: nil, keyEquivalent: "")
-        clockMenuItem.submenu = clockMenu
-        menu.addItem(clockMenuItem)
-
+        let menu = buildSpeechMenu()
         menu.addItem(.separator())
 
         let prefsItem = NSMenuItem(title: "Preferences…", action: #selector(showPreferences), keyEquivalent: "")
@@ -468,8 +517,9 @@ DECtalk commands like [:nh] also work.
 // MARK: - NSMenuDelegate for updating menu item states
 extension MenuBarAppDelegate: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
-        if let scheduler = scheduler {
-            clockEnabledMenuItem?.state = scheduler.isEnabled ? .on : .off
+        guard let scheduler = scheduler else { return }
+        for item in clockEnabledMenuItems {
+            item.state = scheduler.isEnabled ? .on : .off
         }
     }
 }
