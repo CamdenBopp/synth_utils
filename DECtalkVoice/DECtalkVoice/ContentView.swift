@@ -66,6 +66,11 @@ struct ContentView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(selectedVoiceID == nil)
 
+                Button("Speak with 1s pause (SSML <break> test)") {
+                    speakWithBreak()
+                }
+                .disabled(selectedVoiceID == nil)
+
                 Spacer()
             }
             .padding()
@@ -95,6 +100,22 @@ struct ContentView: View {
     private func speak() {
         guard let selectedVoiceID, let voice = AVSpeechSynthesisVoice(identifier: selectedVoiceID) else { return }
         let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = voice
+        synthesizer.speak(utterance)
+    }
+
+    /// Exercises the extension's <break time="..."/> handling directly,
+    /// the same mechanism VoiceOver uses to pause before a hint — SSML is
+    /// the only way to get a <break> to the provider at all, since
+    /// AVSpeechUtterance(string:) has no way to express one.
+    private func speakWithBreak() {
+        guard let selectedVoiceID, let voice = AVSpeechSynthesisVoice(identifier: selectedVoiceID) else { return }
+        let ssml = """
+        <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">
+        <voice name="\(voice.name)">Before the pause.<break time="1s"/>After the pause.</voice>
+        </speak>
+        """
+        guard let utterance = AVSpeechUtterance(ssmlRepresentation: ssml) else { return }
         utterance.voice = voice
         synthesizer.speak(utterance)
     }

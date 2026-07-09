@@ -66,18 +66,70 @@ public class DECtalkVoiceExtensionAudioUnit: AVSpeechSynthesisProviderAudioUnit,
         let rateWPM = Int((Double(DECtalkEngine.defaultRateWPM) * rateMultiplier).rounded())
         log.notice("ssml=\(speechRequest.ssmlRepresentation, privacy: .public) rateMultiplier=\(rateMultiplier, privacy: .public) rateWPM=\(rateWPM, privacy: .public)")
 
-        // Strip SSML markup — DECtalkMini's text API takes plain text.
-        var text = speechRequest.ssmlRepresentation
-        if let regex = try? NSRegularExpression(pattern: "<[^>]+>", options: []) {
-            text = regex.stringByReplacingMatches(
-                in: text,
-                options: [],
-                range: NSRange(text.startIndex..., in: text),
-                withTemplate: ""
-            )
+        // DECtalk's text engine has no concept of a pause duration, so
+        // <break time="..."/> (how VoiceOver asks for the gap before a
+        // hint, and any other authored pause) has to be handled here: pull
+        // the breaks out as their own segments up front, synthesize each
+        // text run around them separately, and splice in real silence of
+        // the requested length when stitching everything back together.
+        let segments = SSMLBreaks.segment(speechRequest.ssmlRepresentation)
+        var buffers: [AVAudioPCMBuffer] = []
+        for segment in segments {
+            switch segment {
+            case .text(let raw):
+                let stripped = Self.stripTags(raw)
+                guard !stripped.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
+                if let buffer = DECtalkEngine.shared.synthesize(text: stripped, voiceCode: voice.markupCode, rateWPM: rateWPM) {
+                    buffers.append(buffer)
+                }
+            case .pause(let duration):
+                if let buffer = silenceBuffer(duration: duration) {
+                    buffers.append(buffer)
+                }
+            }
         }
 
-        speechBuffer = DECtalkEngine.shared.synthesize(text: text, voiceCode: voice.markupCode, rateWPM: rateWPM)
+        speechBuffer = Self.concatenate(buffers)
+    }
+
+    // DECtalkMini's text API takes plain text — SSML markup other than
+    // <break>, which SSMLBreaks.segment already pulled out, still needs
+    // stripping (e.g. <prosody> tags left in a text segment).
+    private static func stripTags(_ text: String) -> String {
+        guard let regex = try? NSRegularExpression(pattern: "<[^>]+>", options: []) else { return text }
+        return regex.stringByReplacingMatches(
+            in: text,
+            options: [],
+            range: NSRange(text.startIndex..., in: text),
+            withTemplate: ""
+        )
+    }
+
+    private func silenceBuffer(duration: TimeInterval) -> AVAudioPCMBuffer? {
+        let frameCount = AUAudioFrameCount(max(0, (duration * format.sampleRate).rounded()))
+        guard frameCount > 0, let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return nil }
+        buffer.frameLength = frameCount
+        if let destination = buffer.floatChannelData?[0] {
+            destination.update(repeating: 0, count: Int(frameCount))
+        }
+        return buffer
+    }
+
+    private static func concatenate(_ buffers: [AVAudioPCMBuffer]) -> AVAudioPCMBuffer? {
+        guard let format = buffers.first?.format else { return nil }
+        let totalFrames = buffers.reduce(AVAudioFrameCount(0)) { $0 + $1.frameLength }
+        guard totalFrames > 0, let combined = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: totalFrames) else { return nil }
+        combined.frameLength = totalFrames
+
+        guard let destination = combined.floatChannelData?[0] else { return nil }
+        var offset = 0
+        for buffer in buffers {
+            guard let source = buffer.floatChannelData?[0] else { continue }
+            let count = Int(buffer.frameLength)
+            destination.advanced(by: offset).update(from: source, count: count)
+            offset += count
+        }
+        return combined
     }
 
     public override func cancelSpeechRequest() {
