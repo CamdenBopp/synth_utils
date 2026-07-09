@@ -60,20 +60,24 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
             PrefKeys.voiceAutocompleteEnabled: true
         ])
 
+        seedStatusItemPositionIfNeeded()
+
         scheduler = ClockScheduler(engine: engine)
 
         installMainMenu()
         setupStatusItem()
 
-        // Start as regular so Cmd-Tab works when we show the window.
+        // Always .regular, permanently — never .accessory. Flipping to
+        // .accessory on window close used to hide the Dock icon and drop
+        // the app's menu bar ownership, which is exactly what VoiceOver's
+        // VO+M (jump to menu bar) needs to still be there: with no window
+        // open and the app demoted to .accessory, VO+M had nothing of
+        // this app's to land on, which read as the app "disappearing".
+        // Staying .regular keeps Cmd-Tab, the Dock icon, and the main
+        // menu (including the Speech menu) always present and navigable.
         NSApp.setActivationPolicy(.regular)
 
-        // Decide mode based on args (reliable)
-        if forceBackground && !forceWindow {
-            // Menu-bar only
-            switchToAccessoryMode()
-        } else {
-            // Normal/manual launch => show window
+        if !forceBackground || forceWindow {
             showInputWindow()
         }
 
@@ -93,8 +97,22 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
         scheduler?.stopScheduler()
     }
 
-    private func switchToAccessoryMode() {
-        NSApp.setActivationPolicy(.accessory)
+    // macOS only writes "NSStatusItem Preferred Position <autosaveName>"
+    // after the user successfully Command-drags the item to a new spot —
+    // it is NOT written just because autosaveName is set. On this machine
+    // the item has been landing far enough right (overlapping the system
+    // clock) that it's unclickable, so that drag can never happen and the
+    // key never gets created — a chicken-and-egg trap. Seeding it once,
+    // in-process (the sandboxed-safe way to do this — Terminal `defaults
+    // write` would target the wrong domain), gives AppKit a starting
+    // position in the open band the other third-party extras already use
+    // (measured ~1144–1282pt) before Control Center has a chance to park
+    // it somewhere unreachable. This is the same technique Hammerspoon
+    // uses for the identical problem.
+    private func seedStatusItemPositionIfNeeded() {
+        let key = "NSStatusItem Preferred Position CamdenBopp.DECtalk.StatusItem"
+        guard UserDefaults.standard.object(forKey: key) == nil else { return }
+        UserDefaults.standard.set(1200.0, forKey: key)
     }
 
     private func installMainMenu() {
@@ -110,7 +128,7 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
 
         let closeWindowItem = NSMenuItem(
             title: "Close Window",
-            action: #selector(closeWindowToMenuBar),
+            action: #selector(closeWindow),
             keyEquivalent: "q"
         )
         closeWindowItem.keyEquivalentModifierMask = [.command]
@@ -195,22 +213,10 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
         return menu
     }
 
-    @objc private func closeWindowToMenuBar() {
+    @objc private func closeWindow() {
         inputWindow?.close()
         preferencesController?.close()
         auValidatorWindowController?.close()
-        switchToAccessoryMode()
-    }
-
-    func windowWillClose(_ notification: Notification) {
-        DispatchQueue.main.async {
-            let inputVisible = (self.inputWindow?.isVisible == true)
-            let prefsVisible = (self.preferencesController?.window?.isVisible == true)
-            let auVisible = (self.auValidatorWindowController?.window?.isVisible == true)
-            if !inputVisible && !prefsVisible && !auVisible {
-                self.switchToAccessoryMode()
-            }
-        }
     }
 
     // Menu items need explicit targets to work reliably in menu-bar apps.
@@ -253,6 +259,12 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
                 button.title = "DT"
             }
             button.toolTip = "DECtalk"
+            // VoiceOver announces AXTitle for interactive elements like a
+            // status-bar button — not AXDescription (accessibilityLabel).
+            // With only an image and no text button.title, AXTitle was
+            // empty, so VO had nothing to say for this item even though it
+            // was visually present and had a label/description set.
+            button.setAccessibilityTitle("DECtalk")
             button.setAccessibilityLabel("DECtalk Menu Bar")
             button.setAccessibilityHelp("Open the DECtalk menu")
         }
