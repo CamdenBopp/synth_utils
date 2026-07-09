@@ -9,19 +9,24 @@
 import Foundation
 
 enum VoiceMarker {
+    // The 9 built-in DECtalk voices and their single-letter [:nX] select
+    // codes, per DECtalk's own docs ("DECtalk Voices and Their Associated
+    // Values") — kept in sync with the 9 voices the AUv3 system-voice
+    // extension exposes (DECtalkExtension/Common/Audio Unit/DECtalkEngine.swift).
     static let nameToCode: [String: String] = [
         "paul":   "[:np]",
         "betty":  "[:nb]",
         "harry":  "[:nh]",
         "frank":  "[:nf]",
-        "rita":   "[:nr]",
-        "ursula": "[:nu]",
+        "dennis": "[:nd]",
         "kit":    "[:nk]",
-        "val":    "[:nv]"
+        "ursula": "[:nu]",
+        "rita":   "[:nr]",
+        "wendy":  "[:nw]"
     ]
 
     static func completions() -> [String] {
-        let names = ["Paul", "Betty", "Harry", "Frank", "Rita", "Ursula", "Kit", "Val"]
+        let names = ["Paul", "Betty", "Harry", "Frank", "Dennis", "Kit", "Ursula", "Rita", "Wendy"]
         var out: [String] = []
         for n in names { out.append("<\(n)>") }
         for n in names { out.append("<voice \(n)>") }
