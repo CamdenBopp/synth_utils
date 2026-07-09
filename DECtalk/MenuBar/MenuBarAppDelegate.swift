@@ -162,23 +162,9 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
         quitItem.keyEquivalentModifierMask = [.command, .shift]
         appMenu.addItem(quitItem)
 
-        // Speak Clipboard and Talking Clock also live in the status item's
-        // own menu, but that menu is only reachable if the status item
-        // itself is. This top-level menu is reachable the normal way
-        // (always at a fixed spot) any time the app is frontmost, which
-        // Spotlight/Dock reactivation already gets you to independent of
-        // where macOS decided to put the status item.
-        let speechMenu = buildSpeechMenu()
-        speechMenu.title = "Speech"
-        let speechMenuItem = NSMenuItem()
-        speechMenuItem.submenu = speechMenu
-        mainMenu.addItem(speechMenuItem)
-
         NSApp.mainMenu = mainMenu
     }
 
-    // Shared by the status item's menu and the top-level "Speech" menu so
-    // every action is reachable two ways.
     private func buildSpeechMenu() -> NSMenu {
         let menu = NSMenu()
         menu.delegate = self
