@@ -160,7 +160,17 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
 
     // Menu items need explicit targets to work reliably in menu-bar apps.
     private func setupStatusItem() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // .squareLength, not .variableLength: the label is a fixed 2-char
+        // "DT", so there's nothing to size dynamically. variableLength made
+        // AppKit compute width on the fly, which could race with the very
+        // first menu bar layout pass at launch and get placed wherever
+        // there was leftover room that instant — including jammed up
+        // against the clock — rather than a stable, predictable slot.
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        // Without a stable autosaveName, macOS has nothing reliable to key
+        // the user's dragged position to across launches, so a manually
+        // repositioned icon doesn't reliably stay put session to session.
+        item.autosaveName = "CamdenBopp.DECtalk.StatusItem"
         statusItem = item
 
         if let button = item.button {
