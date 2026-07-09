@@ -11,8 +11,6 @@
 				<dict>
 					<key>description</key>
 					<string>DECtalkVoiceExtension</string>
-					<key>factoryFunction</key>
-					<string>$(PRODUCT_MODULE_NAME).AudioUnitViewController</string>
 					<key>manufacturer</key>
 					<string>Cbop</string>
 					<key>name</key>
@@ -28,14 +26,14 @@
 					<key>type</key>
 					<string>ausp</string>
 					<key>version</key>
-					<integer>1</integer>
+					<integer>67072</integer>
 				</dict>
 			</array>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.AudioUnit-Speech</string>
+		<string>com.apple.AudioUnit</string>
 		<key>NSExtensionPrincipalClass</key>
-		<string>$(PRODUCT_MODULE_NAME).AudioUnitViewController</string>
+		<string>$(PRODUCT_MODULE_NAME).AudioUnitFactory</string>
 	</dict>
 </dict>
 </plist>
