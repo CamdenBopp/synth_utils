@@ -93,7 +93,7 @@
 		F4E1F20FB8E023340FCD1FA2 /* voice.c in Sources */ = {isa = PBXBuildFile; fileRef = 88F4C1BC175ACBB1AE0AFA62 /* voice.c */; };
 		1F007E652F52BB8FDA3C62DB /* vtm.c in Sources */ = {isa = PBXBuildFile; fileRef = AAEB3DCAAFEB8414A64DC1F0 /* vtm.c */; };
 		A29C015A77E742750F4E4C64 /* vtmiont.c in Sources */ = {isa = PBXBuildFile; fileRef = EC34A671A50B784E3D8A9713 /* vtmiont.c */; };
-		36FA62A42051C3BB8E6A8C4E /* DECtalkVoiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0EBECF28D9DD40A386D23DC7 /* DECtalkVoiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		36FA62A42051C3BB8E6A8C4E /* DECtalkVoiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 71E32B87C286B5908D3A3D6A /* DECtalkVoiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		ED092E5BA06ACCB70DC8A778 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F574EB4700759C8FA9D8C5DA /* AVFoundation.framework */; };
 		FFCB52B2B6391B9BAB2FF973 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 318BEEC196E0DE8FEA421499 /* AVFoundation.framework */; };
 /* End PBXBuildFile section */
@@ -759,6 +759,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 68Z6A6ACWF;
+				GENERATE_INFOPLIST_FILE = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"_REENTRANT",
@@ -799,6 +800,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 68Z6A6ACWF;
+				GENERATE_INFOPLIST_FILE = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"_REENTRANT",
