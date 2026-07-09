@@ -10,6 +10,7 @@
 		0015D9FA703D2168F0C276F2 /* libtts.dylib in Embed DECtalk Engine */ = {isa = PBXBuildFile; fileRef = D842A65478560B6267591B97 /* libtts.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		280C9C157D54F43F7573BA0B /* libtts_us.so in Embed DECtalk Engine */ = {isa = PBXBuildFile; fileRef = C325265BC224DB810A6AF315 /* libtts_us.so */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E98F395E2EE29796000F37FF /* DECtalkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E98F395D2EE29796000F37FF /* DECtalkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		98A62AD43655BEF707168096 /* dectalk-dist in Embed DECtalk CLI */ = {isa = PBXBuildFile; fileRef = 2E7861451465E61D11E99F5F /* dectalk-dist */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,9 +61,21 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7A79AAF465C116901B6B5694 /* Embed DECtalk CLI */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				98A62AD43655BEF707168096 /* dectalk-dist in Embed DECtalk CLI */,
+			);
+			name = "Embed DECtalk CLI";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2E7861451465E61D11E99F5F /* dectalk-dist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = "dectalk-dist"; path = "DECtalk/dectalk-dist"; sourceTree = SOURCE_ROOT; };
 		C325265BC224DB810A6AF315 /* libtts_us.so */ = {isa = PBXFileReference; includeInIndex = 1; name = libtts_us.so; path = DECtalkExtension/lib/libtts_us.so; sourceTree = SOURCE_ROOT; };
 		D842A65478560B6267591B97 /* libtts.dylib */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "compiled.mach-o.dylib"; name = libtts.dylib; path = DECtalkExtension/lib/libtts.dylib; sourceTree = SOURCE_ROOT; };
 		E98F391C2EE29795000F37FF /* DECtalk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DECtalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,12 +92,41 @@
 			);
 			target = E98F395C2EE29796000F37FF /* DECtalkExtension */;
 		};
+		1DA957F0B585198A533EED1D /* Exceptions for "DECtalk" folder in "DECtalk" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"dectalk-dist/DECtalk.conf",
+				"dectalk-dist/aclock",
+				"dectalk-dist/dic/dtalk_fr.dic",
+				"dectalk-dist/dic/dtalk_fr_5.dic",
+				"dectalk-dist/dic/dtalk_gr.dic",
+				"dectalk-dist/dic/dtalk_gr_5.dic",
+				"dectalk-dist/dic/dtalk_la.dic",
+				"dectalk-dist/dic/dtalk_la_5.dic",
+				"dectalk-dist/dic/dtalk_sp.dic",
+				"dectalk-dist/dic/dtalk_sp_5.dic",
+				"dectalk-dist/dic/dtalk_uk.dic",
+				"dectalk-dist/dic/dtalk_uk_5.dic",
+				"dectalk-dist/dic/dtalk_us.dic",
+				"dectalk-dist/dic/dtalk_us_1997.dic",
+				"dectalk-dist/dic/dtalk_us_2001.dic",
+				"dectalk-dist/dic/dtalk_us_2002.dic",
+				"dectalk-dist/dic/dtalk_us_5.dic",
+				"dectalk-dist/dic/dtalk_us_s_1997.dic",
+				"dectalk-dist/dic/dtalk_us_s_1998.dic",
+				"dectalk-dist/lib/libtts.dylib",
+				"dectalk-dist/lib/libtts_us.so",
+				"dectalk-dist/say",
+			);
+			target = E98F391B2EE29795000F37FF /* DECtalk */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E98F391E2EE29795000F37FF /* DECtalk */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				1DA957F0B585198A533EED1D /* Exceptions for "DECtalk" folder in "DECtalk" target */,
 			);
 			path = DECtalk;
 			sourceTree = "<group>";
@@ -150,6 +192,7 @@
 			children = (
 				D842A65478560B6267591B97 /* libtts.dylib */,
 				C325265BC224DB810A6AF315 /* libtts_us.so */,
+				2E7861451465E61D11E99F5F /* dectalk-dist */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -188,6 +231,7 @@
 				E98F39192EE29795000F37FF /* Frameworks */,
 				E98F391A2EE29795000F37FF /* Resources */,
 				E98F39852EE29796000F37FF /* Embed Foundation Extensions */,
+				7A79AAF465C116901B6B5694 /* Embed DECtalk CLI */,
 			);
 			buildRules = (
 			);
