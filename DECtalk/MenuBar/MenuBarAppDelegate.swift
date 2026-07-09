@@ -126,6 +126,11 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
 
         let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "App"
 
+        // Everything the status item's own menu has, also here, so none of
+        // it depends on the status item being reachable.
+        addSpeechItems(to: appMenu)
+        appMenu.addItem(.separator())
+
         let closeWindowItem = NSMenuItem(
             title: "Close Window",
             action: #selector(closeWindow),
@@ -165,10 +170,10 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
         NSApp.mainMenu = mainMenu
     }
 
-    private func buildSpeechMenu() -> NSMenu {
-        let menu = NSMenu()
-        menu.delegate = self
-
+    // Shared by the main app menu and the status item's own menu, so both
+    // always carry identical content — nothing lives only behind the
+    // status item, which macOS may or may not place somewhere reachable.
+    private func addSpeechItems(to menu: NSMenu) {
         let speakClipboardItem = NSMenuItem(title: "Speak Clipboard", action: #selector(speakClipboard), keyEquivalent: "")
         speakClipboardItem.target = self
         menu.addItem(speakClipboardItem)
@@ -195,8 +200,6 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
         let clockMenuItem = NSMenuItem(title: "Talking Clock", action: nil, keyEquivalent: "")
         clockMenuItem.submenu = clockMenu
         menu.addItem(clockMenuItem)
-
-        return menu
     }
 
     @objc private func closeWindow() {
@@ -255,7 +258,9 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegat
             button.setAccessibilityHelp("Open the DECtalk menu")
         }
 
-        let menu = buildSpeechMenu()
+        let menu = NSMenu()
+        menu.delegate = self
+        addSpeechItems(to: menu)
         menu.addItem(.separator())
 
         let prefsItem = NSMenuItem(title: "Preferences…", action: #selector(showPreferences), keyEquivalent: "")
