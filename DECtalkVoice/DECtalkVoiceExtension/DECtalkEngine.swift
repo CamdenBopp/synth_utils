@@ -51,12 +51,28 @@ final class DECtalkEngine {
         return didInit
     }
 
+    // DECtalk's own default rate, in words per minute — confirmed
+    // empirically (not documented anywhere we could find): rendering
+    // identical text with no rate set and with rate explicitly set to 180
+    // produces byte-identical sample counts. SSML <prosody rate="X%"> is a
+    // multiplier of "the voice's default rate", so this is the number
+    // SpeechRateParser's percentages are multiplied against.
+    static let defaultRateWPM = 180
+
+    // DECtalk's valid range, per the classic `say -r` CLI's documented
+    // bounds (75-600); TextToSpeechSetRate does no validation of its own,
+    // so clamp before calling it.
+    static let rateRangeWPM = 75...600
+
     /// Synchronous by design: AVSpeechSynthesisProviderAudioUnit renders
     /// speech offline, so it's safe (and simplest) to block here.
-    func synthesize(text: String, voiceCode: String) -> AVAudioPCMBuffer? {
+    func synthesize(text: String, voiceCode: String, rateWPM: Int) -> AVAudioPCMBuffer? {
         guard initIfNeeded() else { return nil }
 
         accumulatedSamples.removeAll(keepingCapacity: true)
+
+        let clampedRate = min(max(rateWPM, Self.rateRangeWPM.lowerBound), Self.rateRangeWPM.upperBound)
+        TextToSpeechSetRate(Int32(clampedRate))
 
         // DECtalk's classic embedded voice-select markup, e.g. "[:np]" for
         // Paul — prefix it onto the text so this utterance renders in the

@@ -8,6 +8,9 @@
 //
 
 import AVFoundation
+import os
+
+private let log = Logger(subsystem: "CamdenBopp.DECtalkVoice", category: "DECtalkVoiceExtensionAudioUnit")
 
 public class DECtalkVoiceExtensionAudioUnit: AVSpeechSynthesisProviderAudioUnit, @unchecked Sendable {
     private var outputBus: AUAudioUnitBus
@@ -55,6 +58,14 @@ public class DECtalkVoiceExtensionAudioUnit: AVSpeechSynthesisProviderAudioUnit,
 
         let voice = DECtalkVoice.from(identifier: speechRequest.voice.identifier)
 
+        // Read <prosody rate="..."> before stripping SSML markup — this is
+        // how the rate slider/rotor (VoiceOver, and Settings > Accessibility
+        // > Spoken Content) actually communicates its setting; there's no
+        // separate rate field on the request to read instead.
+        let rateMultiplier = SSMLProsody.rateMultiplier(in: speechRequest.ssmlRepresentation)
+        let rateWPM = Int((Double(DECtalkEngine.defaultRateWPM) * rateMultiplier).rounded())
+        log.notice("ssml=\(speechRequest.ssmlRepresentation, privacy: .public) rateMultiplier=\(rateMultiplier, privacy: .public) rateWPM=\(rateWPM, privacy: .public)")
+
         // Strip SSML markup — DECtalkMini's text API takes plain text.
         var text = speechRequest.ssmlRepresentation
         if let regex = try? NSRegularExpression(pattern: "<[^>]+>", options: []) {
@@ -66,7 +77,7 @@ public class DECtalkVoiceExtensionAudioUnit: AVSpeechSynthesisProviderAudioUnit,
             )
         }
 
-        speechBuffer = DECtalkEngine.shared.synthesize(text: text, voiceCode: voice.markupCode)
+        speechBuffer = DECtalkEngine.shared.synthesize(text: text, voiceCode: voice.markupCode, rateWPM: rateWPM)
     }
 
     public override func cancelSpeechRequest() {
