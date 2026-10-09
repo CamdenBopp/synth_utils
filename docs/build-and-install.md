@@ -1,4 +1,4 @@
-# Build and install DECtalk
+# Build and install DECtalk on your Mac
 
 Build DECtalk in Xcode, install it in your Applications folder, and confirm that macOS recognizes the voices.
 
@@ -73,3 +73,9 @@ If the voices don't appear, see [If you don't see the DECtalk voices](troublesho
 2. Drag `DECtalk.app` from the Applications folder to the Trash.
 
 The voices are removed along with the app.
+
+## Learn more
+
+- [Use the DECtalk app](use-the-app.md)
+- [Use DECtalk voices on your Mac](use-the-voices.md)
+- To install DECtalk on an iPhone or iPad, see [Build and install DECtalk on iPhone and iPad](ios-build-and-install.md).

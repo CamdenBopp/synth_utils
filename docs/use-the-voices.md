@@ -4,7 +4,7 @@ After you install DECtalk, its nine voices work like the other voices on your Ma
 
 ## Before you begin
 
-Install DECtalk and open it once. For steps, see [Build and install DECtalk](build-and-install.md).
+Install DECtalk and open it once. For steps, see [Build and install DECtalk on your Mac](build-and-install.md).
 
 ## See which voices are available
 
@@ -61,4 +61,5 @@ The voices render speech at 11.025 kHz in mono, which is the format DECtalk prod
 ## Learn more
 
 - [Use the DECtalk app](use-the-app.md)
+- [Use DECtalk voices on iPhone and iPad](ios-use-the-voices.md)
 - [If DECtalk doesn't work as expected](troubleshooting.md)

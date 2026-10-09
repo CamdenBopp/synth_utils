@@ -1,6 +1,6 @@
 # If DECtalk doesn't work as expected
 
-Find solutions to common problems with DECtalk.
+Find solutions to common problems with DECtalk. Sections that apply only to iPhone and iPad say so in the heading.
 
 ## If you don't see the DECtalk voices
 
@@ -17,6 +17,18 @@ Try these steps in order. After each one, check again with `say -v '?' | grep DE
 
    The list should include `CamdenBopp.DECtalk.DECtalkExtension`, or the identifier you chose if you changed it. If it isn't listed, rebuild the app and install it again.
 5. Restart your Mac.
+
+## If DECtalk Voice finds no voices (iPhone and iPad)
+
+DECtalk Voice shows "DECtalk voices found" followed by a number near the top of the screen. If the number is 0, try these steps in order.
+
+1. Wait about 10 seconds, close DECtalk Voice, and open it again. After a fresh install, iOS can take a moment to register the extension, so the first launch can show 0 while the second shows 9.
+2. Tap Refresh.
+3. Delete DECtalk Voice from your device, then build and install it again.
+4. Restart your device.
+5. If you build the app yourself, confirm that the extension is inside the app. In the built app, the `PlugIns` folder should contain `DECtalkVoiceExtension.appex`. If it doesn't, the extension isn't being embedded, and iOS can't find it.
+
+**Note:** The Activation diagnostics section can say "Components found: 0" and "Instantiate succeeded: no" even when the voices are registered. Use the voice count near the top of the screen to decide whether the voices are installed.
 
 ## If a voice doesn't speak
 
@@ -39,7 +51,7 @@ If the build stops with a message that includes "PLA Update available," your App
 
 ## If Xcode can't sign the extension
 
-If you see "Embedded binary's bundle identifier is not prefixed with the parent app's bundle identifier," the extension's bundle identifier doesn't start with the app's. For example, if the app is `com.example.DECtalk`, the extension must be `com.example.DECtalk.DECtalkExtension`.
+If you see "Embedded binary's bundle identifier is not prefixed with the parent app's bundle identifier," the extension's bundle identifier doesn't start with the app's. For example, if the Mac app is `com.example.DECtalk`, the extension must be `com.example.DECtalk.DECtalkExtension`. The same rule applies to the iPhone and iPad version.
 
 If a message says a provisioning profile doesn't include your signing certificate, select your team for both the DECtalk and DECtalkExtension targets. Then build again with automatic signing on.
 
@@ -64,5 +76,6 @@ The clipboard doesn't contain text. Copy some text, then try again. If you copie
 
 ## Learn more
 
-- [Build and install DECtalk](build-and-install.md)
+- [Build and install DECtalk on your Mac](build-and-install.md)
 - [Use the DECtalk app](use-the-app.md)
+- [Build and install DECtalk on iPhone and iPad](ios-build-and-install.md)
