@@ -56,7 +56,19 @@ enum SSMLBreaks {
         return segments
     }
 
+    // DECtalk's own synthesis already carries a bit of natural trailing
+    // and leading silence around each segment, so a requested break ends
+    // up compounding with that and landing longer than the number itself
+    // says — applied uniformly (not just to the guessed defaults below)
+    // since that compounding affects an explicit time="..." value the
+    // same way. Tune this if pauses still feel off.
+    private static let durationScale = 0.65
+
     private static func duration(fromBreakAttributes attrs: String) -> TimeInterval {
+        return durationScale * rawDuration(fromBreakAttributes: attrs)
+    }
+
+    private static func rawDuration(fromBreakAttributes attrs: String) -> TimeInterval {
         if let value = attributeValue("time", in: attrs) {
             if value.hasSuffix("ms"), let ms = Double(value.dropLast(2)) {
                 return max(0, ms / 1000.0)

@@ -97,12 +97,29 @@ public class DECtalkVoiceExtensionAudioUnit: AVSpeechSynthesisProviderAudioUnit,
     // stripping (e.g. <prosody> tags left in a text segment).
     private static func stripTags(_ text: String) -> String {
         guard let regex = try? NSRegularExpression(pattern: "<[^>]+>", options: []) else { return text }
-        return regex.stringByReplacingMatches(
+        let stripped = regex.stringByReplacingMatches(
             in: text,
             options: [],
             range: NSRange(text.startIndex..., in: text),
             withTemplate: ""
         )
+        return normalizeWhitespace(stripped)
+    }
+
+    // Accessibility labels sourced from web/Electron-style UIs commonly
+    // contain U+00A0 (non-breaking space, the usual result of &nbsp; in
+    // rendered HTML) or other Unicode whitespace instead of a plain ASCII
+    // space — visually and even in a text field they look and copy/paste
+    // identical to a normal space, but DECtalk's classic tokenizer only
+    // treats 0x20 as a word boundary, so words on either side get run
+    // together with no audible gap. Normalize every Unicode whitespace
+    // character (and known zero-width spacing characters, which aren't in
+    // CharacterSet.whitespacesAndNewlines) to a plain space before this
+    // reaches the engine.
+    private static func normalizeWhitespace(_ text: String) -> String {
+        let zeroWidth = CharacterSet(charactersIn: "\u{200B}\u{200C}\u{200D}\u{2060}\u{FEFF}")
+        let toNormalize = CharacterSet.whitespacesAndNewlines.union(zeroWidth)
+        return String(text.unicodeScalars.map { toNormalize.contains($0) ? " " : Character($0) })
     }
 
     private func silenceBuffer(duration: TimeInterval) -> AVAudioPCMBuffer? {

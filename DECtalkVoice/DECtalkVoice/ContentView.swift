@@ -71,6 +71,11 @@ struct ContentView: View {
                 }
                 .disabled(selectedVoiceID == nil)
 
+                Button("Speak \"Send button\" with non-breaking space") {
+                    speakWithNonBreakingSpace()
+                }
+                .disabled(selectedVoiceID == nil)
+
                 Spacer()
             }
             .padding()
@@ -116,6 +121,17 @@ struct ContentView: View {
         </speak>
         """
         guard let utterance = AVSpeechUtterance(ssmlRepresentation: ssml) else { return }
+        utterance.voice = voice
+        synthesizer.speak(utterance)
+    }
+
+    /// Reproduces the "words run together" bug: a non-breaking space
+    /// (U+00A0) looks and copy/pastes identical to a normal space, but
+    /// without the fix in DECtalkVoiceExtensionAudioUnit.stripTags the
+    /// engine's classic tokenizer doesn't treat it as a word boundary.
+    private func speakWithNonBreakingSpace() {
+        guard let selectedVoiceID, let voice = AVSpeechSynthesisVoice(identifier: selectedVoiceID) else { return }
+        let utterance = AVSpeechUtterance(string: "Send\u{00A0}button")
         utterance.voice = voice
         synthesizer.speak(utterance)
     }
